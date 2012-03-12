@@ -12,3 +12,7 @@ This project creates a sidebar as part of Google chrome that loads the latest qu
 flexibility of setting the no.of questions to be loaded and to customize it based on your login.
 
 This add-on is not build using Stackoverflow API 2.0 so this will definitely break with API 2.0.
+
+People who want to use the sidebar alone should modify the sidebar.js file. 
+
+The installation of the extension is quite simple all you need to do is download the entire repo and put it in a folder and go to Chrome->Tools->Extensions and add Unpackaged extension and point to the folder that you just created. That is! You will get the extension in chrome to be tested.
