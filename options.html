@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title> Tags for SOUpdater </title>
+</head>
+<script type="text/javascript" src="/jquery.min.js"></script>
+<style type="text/css">
+.HL	{background: #F3F5F7;color: #000000;border: 1pt solid #AEBDCC;width: 70%;}
+</style>
+<body>
+
+<h1 style="margin-left: 30%;"> SOUpdater Options Page </h1>
+<label> PageSize: </label>
+<input type="text" id ="SOUpdaterPageSize"></input><br />
+<label> UserID: </label>
+<input type="text" id="SOUpdaterUserID"></input><br /><div style="font-color: light-grey; font-size: 10px; margin-left:2.1%;"> (User ID is a 6 digit number that appears in the URL when you go to your profile page.) </div>
+<button onclick="SaveToBackground();">Save Tags</button>
+
+<div class="HL" style="display: none;">
+
+</div>
+</body>
+
+<script type="text/javascript">
+$(document).ready(function(){
+	var SOUpdaterTags = localStorage["Tags"];
+	if(!SOUpdaterTags){
+		SOUpdaterTags="";
+	}
+	var tags = document.getElementById("SOUpdaterTags");
+	var SOUpdaterPageSize = localStorage["PageSize"];
+	if(!SOUpdaterPageSize){
+		SOUpdaterPageSize="";
+	}
+	var pageSize = document.getElementById("SOUpdaterPageSize");
+	pageSize.value = SOUpdaterPageSize;
+	
+	var SOUpdaterUserID = localStorage["UserID"];
+	if(!SOUpdaterUserID){
+		SOUpdaterUserID="";
+	}
+	var favtags = document.getElementById("SOUpdaterUserID");
+	favtags.value = SOUpdaterUserID
+});
+function SaveToBackground(){
+	localStorage["Tags"] = $("#SOUpdaterTags").attr('value');
+	localStorage["UserID"] = $("#SOUpdaterUserID").attr('value');
+	localStorage["PageSize"] = $("#SOUpdaterPageSize").attr('value');
+	
+	$(".HL").text("Updated Succefully!");
+	$(".HL").show();
+}
+</script>
+
+</html>

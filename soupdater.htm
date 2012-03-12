@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<title> Creating html from js </title>
+</head>
+<link rel="stylesheet" type="text/css" href="Style.css"></link>
+<script type="text/javascript" src=" https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+<script type="text/javascript" src="script1.js"></script>
+
+<script type="text/javascript">
+
+Array.prototype.contains = function(obj) {
+    var i = this.length;
+    while (i--) {
+        if (this[i] === obj) {
+            return true;
+        }
+    }
+    return false;
+}
+if (!Array.prototype.indexOf)
+{
+  Array.prototype.indexOf = function(elt /*, from*/)
+  {
+    var len = this.length;
+
+    var from = Number(arguments[1]) || 0;
+    from = (from < 0)
+         ? Math.ceil(from)
+         : Math.floor(from);
+    if (from < 0)
+      from += len;
+
+    for (; from < len; from++)
+    {
+      if (from in this &&
+          this[from] === elt)
+        return from;
+    }
+    return -1;
+  };
+}
+
+var vars = [], hash;
+
+function getUrlVars()
+{
+	var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+	for(var i = 0; i < hashes.length; i++)
+	{
+		hash = hashes[i].split('=');
+		vars.push(hash[0]);
+		vars[hash[0]] = hash[1];
+	}
+	return vars;
+	
+}
+
+
+	$(document).ready(function(){
+		getUrlVars();
+		var fe = new SOUpdater.Draw.Fetcher;
+		fe.setTags(vars["favTags"]);
+		setInterval(
+			function(){
+				fe.load_script('http://api.stackoverflow.com/1.1/questions/?key=ZpfMplIV7kKcbZEZP30M4g&sort=creation&pagesize='+vars["ps"]+'&tagged=&jsonp=soResponse&body=true'); 
+				}, 16000 );
+	});
+</script>
+<body>
+	<div id="SOContainer">
+	
+	</div>
+
+</body>
+</html>

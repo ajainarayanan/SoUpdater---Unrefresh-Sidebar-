@@ -1,0 +1,276 @@
+<!--
+**********************************************************************************
+* Script Name: Background.html - This is the default html file as part of the    *
+*			   chrome add-on. This handles the front-end of the chrome extension *
+*			   																	 *
+* Date: 	   25-Dec-2011														 *
+* Developer:   Ananthanarayanan,Ajai   										     *
+**********************************************************************************
+-->
+<html>
+<body>
+  <script type="text/javascript" src="/querypage.js"></script>
+  <script type="text/javascript" src="/jquery.min.js"></script>
+  <script type="text/javascript" src="/script1.js"></script>
+  <script type="text/javascript">
+
+</script>
+
+  <script type="text/javascript">
+  
+  /* Getter for Service (Whether the add-on is enabled or not */
+  var getService = function(key){
+	return localStorage.getItem(key) == "false" ? false : true;  
+  }
+  /* Setter for Service */
+  var setService = function(key,value){
+	localStorage.removeItem(key);
+	localStorage.setItem(key,value);
+  }
+  
+  var readyTabs= {};
+  var obj_temp;
+  //Var to check if the add-on is running for the first time.
+  var firsttime = true;
+  //Var to compare the question during last refresh and the current question.
+  var lastQuestion;
+  //Var to hold interested tag for the user.
+  var favTagsArray = new Array();
+  
+  //////////////////////////////////////////////////////////////////////////////////////////////
+  // Function to change the switch's state to indicate whether the add-on is enabled or disabled.
+  function toggleService(path,title){
+	 chrome.browserAction.setIcon({path: path});
+	 chrome.browserAction.setTitle({title: title});
+  }
+  ////////////////////////////////////////////////////////////////////////
+  //Function to change the switch to indicate that the add-on is disabled.
+  function switchOffAddon(){
+	var path = 'icons/SOUpdaterLogodisabled.png';
+	var title = 'Click to enable SOUpdater';
+	toggleService(path,title);
+  }
+  ////////////////////////////////////////////////////////////////////////
+  //Function to change the switch to indicate that the add-on is enabled.
+  function switchOnAddon(){
+    var path = 'icons/SOUpdaterLogo.png';
+    var title = 'Click to disable SOUpdater';
+	toggleService(path,title);
+  }
+  
+  ///////////////////////////////////////////////////////////
+  //Function to toggle the add-on to enabled/disabled state.
+  function changeStatus(){
+	if(getService("_service")){
+		setService("_service",false);
+		var path = 'icons/SOUpdaterLogodisabled.png';
+		var title = 'Click to enable SOUpdater';
+		toggleService(path,title);
+	}	 
+	else{
+		setService("_service",true);
+		var path = 'icons/SOUpdaterLogo.png';
+        var title = 'Click to disable SOUpdater';
+		toggleService(path,title);
+	}
+  }
+  
+  /*
+	 This the first JSONP request from this page.This is seperate from the JSONP 
+		request made for getting the threads to be displayed in sidebar.
+		Two seperate requests are sent to SO,
+			1. To get the threads,
+			2. To get user (of sidebar)'s information to get the list of tags that he/she is interested
+				to highlight the threads as one gets when the user is logged in.
+  */
+  
+  ///////////////////////////////////////////////////////////
+  // Function to highlights threads which has tags that the 
+  // user is interested in.
+  function taggedInteresting(){
+	if(localStorage["UserID"] >0){
+		_load_script_tags("http://api.stackoverflow.com/1.1/users/"+localStorage["UserID"]+"/tags??key=uRgW3Xr8U0mbsHciMe9B7g&pagesize=100&jsonp=soResponseTags");
+		return favTagsArray;
+	}
+	return [""];
+  }
+  
+  /////////////////////////////////////////////////////////////
+  // Function to load the jsonp script tag in DOM to get 
+  // Jsonp data from SO.
+  function _load_script_tags(src) {
+		var script= document.createElement('script');
+		script.src = src;
+		script.id="jsonpTagTag";
+		document.getElementsByTagName('head')[0].appendChild(script);
+		return script; 
+	}
+	
+	///////////////////////////////////////////////////////////
+	// Function that gets invoked once the Jsonp data is 
+	// received from SO's server.
+	function soResponseTags(obj) {
+		obj_temp_tags = obj;
+		var i=0;
+		favTagsArray.length =0;
+		for(i=0;i<obj.total;i++){
+			favTagsArray.push(obj.tags[i].name);
+		}
+		
+		if($("script#jsonpTagTag").length > 0){
+			$("script#jsonpTagTag").remove();
+		}	
+   }
+  
+  /////////////////////////////////////////////////////////////
+  // Propagate the change (whether the addon is enabled/disabled
+  // to all the tabs currently opened.
+  function propagateChange(){
+	chrome.tabs.getAllInWindow(null, function(tabs){
+			  $.each(tabs, function(i, tab){
+					//tabChanged(tab.id);
+					
+					notifyFG(tab.id,'tabChanged',{service: getService("_service"), PageSize: localStorage["PageSize"], favTags: taggedInteresting()});
+			  });
+			});
+  }
+  
+  /////////////////////////////////////////////////////////////
+  // Getter of page size. Pagesize indicates no.of threads to 
+  // be displayed in the sidebar.
+  function getPageSize(){
+	var pageSize = localStorage["PageSize"];
+		if(!pageSize){
+			pageSize = 10;
+		}
+	return pageSize;
+  }
+  
+  //////////////////////////////////////////////////
+  // Getter for tags that the user is interested in.
+  function getTags(){
+	var tags = localStorage["Tags"];
+		if(!tags){
+			tags="";
+		}
+	return tags;
+  }
+  //////////////////////////////////////////////////
+  // Function that is used to send request to the 
+  // querypage(content script). Part of message
+  // Passing.
+  function notifyFG(tabID,message,content){
+	chrome.tabs.sendRequest(tabID,{ Meta: message,messageContent: content },function(response){/*alert(response.data);*/});
+  }
+  
+  
+  //////////////////////////////////////////////////
+  // Event handler when the user clicks addon icon
+  // in bookmarks bar in chrome browser.
+  chrome.browserAction.onClicked.addListener(function(tab) {		
+		console.log('add-on icon clicked');
+		changeStatus();
+		//triggerChange(tab.id); 
+		propagateChange();
+   });
+  
+  //////////////////////////////////////////////////
+  // Event handler that gets triggered when the addon
+  // is updated.
+  chrome.tabs.onUpdated.addListener(function(tabId, changeInfo){
+		if(changeInfo.status == "complete"){
+		notifyFG(tabId,'tabChanged',{service: getService("_service"), PageSize: localStorage["PageSize"], favTags: taggedInteresting()});
+		}
+   });
+   
+   //////////////////////////////////////////////////
+   // Event handler handler that gets triggered when 
+   // the addon is removed.
+  chrome.tabs.onRemoved.addListener(function(tabId){
+      delete readyTabs[tabId];
+      delete messages[tabId];
+    });
+   
+   
+  chrome.tabs.onSelectionChanged.addListener(function(tabId,changeInfo){
+		if(changeInfo.status == "complete"){
+			//tabChanged(tabId);
+			notifyFG(tab.id,'tabChanged',getService("_service"));
+		}	
+   });
+  
+  
+  /////////////////////////////////////////////////////
+  // Snippet that gets executed when the addon is 
+  // loaded.
+  if(getService("_service")){
+ 	switchOnAddon();
+  }else{
+	switchOffAddon();
+  }
+   
+   /////////////////////////////////////////////////////
+   // Notification sent to tab whenever there is a 
+   // change of question in SO. Update notification
+   // part.
+    function questionNotification(){	 	
+		if(typeof localStorage["PageSize"] === "undefined"){
+			_load_script('http://api.stackoverflow.com/1.1/questions/?key=uRgW3Xr8U0mbsHciMe9B7g&sort=creation&pagesize=10&jsonp=soResponse&body=true');
+		}else{
+			_load_script('http://api.stackoverflow.com/1.1/questions/?key=uRgW3Xr8U0mbsHciMe9B7g&sort=creation&pagesize='+localStorage["PageSize"]+'&jsonp=soResponse&body=true');
+		}
+		var obj = obj_temp;
+		if(firsttime == true){  lastQuestion = obj.questions[0].title; firsttime = false;}
+		console.log("Notification Received: "+obj.total);
+		
+		console.log("Obj.question = "+ obj.questions[0].title);
+		console.log("Last question = "+ lastQuestion);
+		if(	obj.questions[0].title != lastQuestion ){
+			lastQuestion = obj.questions[0].title;		
+			
+			chrome.tabs.getAllInWindow(null, function(tabs){
+			  $.each(tabs, function(i, tab){
+					console.log("Sending question change notification to : " + tab.id);
+					notifyFG(tab.id,'questionChanged',{service: "Question Changed", PageSize: localStorage["PageSize"], favTags: taggedInteresting()});
+			  });
+			});
+			
+		}
+    }
+	/*
+		This is the 2nd place where the JSONP request is made. This is to 
+		get the list of questions from SO every 'm' seconds and check
+		if there is any change. If the previously displayed set of 
+		questions differ from the one that we received then this indicates
+		new questions and there by used in notifying user for new questions.
+	*/
+	/////////////////////////////////////////////////////
+	// Function to load script tag to get SO questions.
+	function _load_script(src) {
+		var script= document.createElement('script');
+		script.src = src;
+		script.id="jsonpTag";
+		document.getElementsByTagName('head')[0].appendChild(script);
+		return script; 
+	}
+	
+	/////////////////////////////////////////////////////
+	// Function that gets called when we get a response 
+	// from SO with questions and body of it.
+	function soResponse(obj) {
+		obj_temp = obj;
+		if(obj != null){
+			console.log(obj.total);
+		}
+		if($("script#jsonpTag").length > 0){
+			$("script#jsonpTag").remove();
+		}
+	}
+	///////////////////////////////////////////////////////
+	// Runs every '5' seconds to check for any update.
+	self.setInterval("questionNotification()",5000);
+  </script>
+  <p> This is where the content goes" </p>
+  
+  </body>
+</html>
