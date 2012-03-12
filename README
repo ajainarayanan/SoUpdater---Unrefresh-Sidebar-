@@ -3,12 +3,12 @@
   Creation Date: 3/12/2012
   Document: README (!!)
   
-The SoUpdater is my first own project that I consider as a start to creating a sub-browsing inside your webbrowser. 
-Its like reading an RSS feed as part of your browser(not something like Rockmelt do!) but adding more to it. The idea
+The SoUpdater is my first own project that I consider as a start to creating a sub-browsing inside your webbrowser.Its like reading an RSS feed as part of your browser(not something like Rockmelt do!) but adding more to it. The idea
 that you can build your own subsidiary world to browse gives great advantage in customizing it to your own interest.
 
-SoUpdater is one start towards that. This project creates a sidebar as part of Google chrome that loads the latest questions
-in discussed in stackoverflow website without the user having to refresh to get the latest ones. It provides the 
+SoUpdater is one start towards that. 
+
+This project creates a sidebar as part of Google chrome that loads the latest questions in discussed in stackoverflow website without the user having to refresh to get the latest ones. It provides the 
 flexibility of setting the no.of questions to be loaded and to customize it based on your login.
 
 This add-on is not build using Stackoverflow API 2.0 so this will definitely break with API 2.0.
